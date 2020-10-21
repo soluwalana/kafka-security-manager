@@ -53,7 +53,12 @@ libraryDependencies ++= Seq(
   "beyondthelines" %% "grpcgatewayruntime" % "0.0.9" % "compile,protobuf",
 
   // AWS SDK to access S3
-  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.385"
+  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.385",
+
+  // Postgresql Access
+  "org.postgresql" % "postgresql" % "42.2.18",
+  "com.typesafe.slick" %% "slick" % "2.1.0",
+  "org.slf4j" % "slf4j-nop" % "1.6.4"
 
 )
 

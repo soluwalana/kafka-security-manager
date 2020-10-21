@@ -5,6 +5,7 @@ import com.github.simplesteph.ksm.source.SourceAcl
 import com.typesafe.config.Config
 import kafka.security.auth.Authorizer
 import kafka.utils.CoreUtils
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -30,7 +31,9 @@ class AppConfig(config: Config) {
   }
 
   object Source {
+    val log = LoggerFactory.getLogger(classOf[AppConfig])
     private val sourceAclClass = config.getString("source.class")
+    log.warn(config.getConfig("source").toString)
     val sourceAcl: SourceAcl = CoreUtils.createObject[SourceAcl](sourceAclClass)
 
     // here we get a dynamic config prefix given by the class.
