@@ -4,6 +4,7 @@ import java.io._
 import java.util.Date
 import java.sql.Timestamp
 
+import com.github.tototoshi.csv.{CSVFormat, CSVWriter, QUOTE_MINIMAL, Quoting}
 import scala.slick.driver.PostgresDriver.simple._
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
@@ -64,7 +65,7 @@ class PGSourceAcl extends SourceAcl {
     } else {
       connectionURL = s"jdbc:postgresql://$host:$port/$database?user=$user&sslrootcert=$caCert&sslcert=$clientCert&sslkey=$clientKey&sslmode=verify-full"
     }
-    log.warn(s"Connection url being used $connectionURL")
+    log.info(s"Connection url being used $connectionURL")
   }
 
   /**
@@ -88,9 +89,14 @@ class PGSourceAcl extends SourceAcl {
         if (!x.isEmpty) {
           latest = x.get
         }
+        var s = new StringWriter()
+        var b = new BufferedWriter(s)
+        val csvWriter = CSVWriter.open(b)
+        csvWriter.writeRow(List("KafkaPrincipal", "ResourceType", "PatternType", "ResourceName", "Operation", "PermissionType", "Host"))
+
         if (latest.after(lastModified)) {
           lastModified = latest
-          csv = acl.filter(
+          acl.filter(
             _.deleted === false
           ).map(
             x => (
@@ -102,16 +108,14 @@ class PGSourceAcl extends SourceAcl {
               x.permissionType,
               x.host
             )
-          ).list.map(
-            _.productIterator.mkString(",")
-          ).mkString("\n")
-          log.warn(s"The csv for the acls was $csv in function")
-        } else {
-          log.warn(s"LATEST NOT EXPECTED ${latest.toString} ${lastModified.toString}")
+          ).list.map( r => {
+            csvWriter.writeRow(List(r._1, r._2, r._3, r._4, r._5, r._6, r._7))
+          })
+          csv = s.toString
         }
       }
     }
-    log.warn(s"The csv for the acls was $csv out of function")
+    log.info(s"ACL CSV:\n\n$csv")
     if (csv == "") {
       return None
     }
